@@ -1,5 +1,5 @@
 from tkinter import *
-import time
+import time, copy
 from random import randrange, randint
 
 canvasConfig = {
@@ -10,7 +10,7 @@ canvasConfig = {
 # #cdc1b4
 positionConfig = {
 	"marginAround": 10,
-	"marginBetween": 5,
+	"marginBetween": 10,
 	"width_count": 4,
 	"height_count": 4
 }
@@ -99,7 +99,8 @@ def rectangles_generation():
 				coords["y"], 
 				coords["x"]+coords["width"], 
 				coords["y"]+coords["height"], 
-				fill=cell["bg"][value])
+				fill=cell["bg"][value],
+				outline=cell["bg"][value])
 
 			text = (value if value else "")
 			canvas.create_text(coords["x"]+coords["width"]/2, 
@@ -120,48 +121,93 @@ def map_init():
 
 
 def moveUp():
-	for _ in range(0,int(max(positionConfig["width_count"], positionConfig["height_count"])*1.5)):
-		for X in range(0, positionConfig["width_count"]):
-			for Y in range(0, positionConfig["height_count"]-1):
-				if cell["map"][X][Y] == 0 and cell["map"][X][Y+1] != 0:
-					cell["map"][X][Y] = cell["map"][X][Y+1]
-					cell["map"][X][Y+1] = 0
-				elif cell["map"][X][Y] != 0 and cell["map"][X][Y+1] == cell["map"][X][Y]:
-					cell["map"][X][Y+1] = 0
-					cell["map"][X][Y] *= 2
+	for X in range(0, positionConfig["width_count"]):
+		for Y in range(0, positionConfig["height_count"]-1):
+
+			"""
+				If the cell is empthy - find next not empthy cell
+				and swap values
+			"""
+			if cell["map"][X][Y] == 0:
+				for curY in range(Y+1, positionConfig["height_count"]):
+					if cell["map"][X][curY] != 0:
+						cell["map"][X][Y] = cell["map"][X][curY]
+						cell["map"][X][curY] = 0
+						break
+
+			"""
+				If the cell isn't empthy - find next cell with the same value
+				and double the value
+			"""
+			if cell["map"][X][Y] != 0:
+				for curY in range(Y+1, positionConfig["height_count"]):
+					if cell["map"][X][curY] == cell["map"][X][Y]:
+						cell["map"][X][Y] = cell["map"][X][Y] * 2
+						cell["map"][X][curY] = 0
+						break
+					elif cell["map"][X][curY] != 0:
+						break 
+
 
 def moveDown():
-	for _ in range(0,int(max(positionConfig["width_count"], positionConfig["height_count"])*1.5)):
-		for X in range(0, positionConfig["width_count"]):
-			for Y in reversed(range(1, positionConfig["height_count"])):
-				if cell["map"][X][Y] == 0 and cell["map"][X][Y-1] != 0:
-					cell["map"][X][Y] = cell["map"][X][Y-1]
-					cell["map"][X][Y-1] = 0
-				elif cell["map"][X][Y] != 0 and cell["map"][X][Y-1] == cell["map"][X][Y]:
-					cell["map"][X][Y-1] = 0
-					cell["map"][X][Y] *= 2
+	for X in range(0, positionConfig["width_count"]):
+		for Y in reversed(range(1, positionConfig["height_count"])):
+			
+			if cell["map"][X][Y] == 0:
+				for curY in reversed(range(0, Y)):
+					if cell["map"][X][curY] != 0:
+						cell["map"][X][Y] = cell["map"][X][curY]
+						cell["map"][X][curY] = 0
+						break
+
+			if cell["map"][X][Y] != 0:
+				for curY in reversed(range(0, Y)):
+					if cell["map"][X][curY] == cell["map"][X][Y]:
+						cell["map"][X][Y] = cell["map"][X][Y] * 2
+						cell["map"][X][curY] = 0
+						break
+					elif cell["map"][X][curY] != 0:
+						break 
 
 def moveLeft():
-	for _ in range(0,int(max(positionConfig["width_count"], positionConfig["height_count"])*1.5)):
+	for Y in range(0, positionConfig["height_count"]):
 		for X in range(0, positionConfig["width_count"]-1):
-			for Y in range(0, positionConfig["height_count"]):
-				if cell["map"][X][Y] == 0 and cell["map"][X+1][Y] != 0:
-					cell["map"][X][Y] = cell["map"][X+1][Y]
-					cell["map"][X+1][Y] = 0
-				elif cell["map"][X][Y] != 0 and cell["map"][X+1][Y] == cell["map"][X][Y]:
-					cell["map"][X][Y] = 0
-					cell["map"][X+1][Y] *= 2
+
+			if cell["map"][X][Y] == 0:
+				for curX in range(X+1, positionConfig["height_count"]):
+					if cell["map"][curX][Y] != 0:
+						cell["map"][X][Y] = cell["map"][curX][Y]
+						cell["map"][curX][Y] = 0
+						break
+
+			if cell["map"][X][Y] != 0:
+				for curX in range(X+1, positionConfig["height_count"]):
+					if cell["map"][curX][Y] == cell["map"][X][Y]:
+						cell["map"][X][Y] = cell["map"][X][Y] * 2
+						cell["map"][curX][Y] = 0
+						break
+					elif cell["map"][curX][Y] != 0:
+						break 
 
 def moveRight():
-	for _ in range(0,int(max(positionConfig["width_count"], positionConfig["height_count"])*1.5)):
+	for Y in range(0, positionConfig["height_count"]):
 		for X in reversed(range(1, positionConfig["width_count"])):
-			for Y in range(0, positionConfig["height_count"]):
-				if cell["map"][X][Y] == 0 and cell["map"][X-1][Y] != 0:
-					cell["map"][X][Y] = cell["map"][X-1][Y]
-					cell["map"][X-1][Y] = 0
-				elif cell["map"][X][Y] != 0 and cell["map"][X-1][Y] == cell["map"][X][Y]:
-					cell["map"][X][Y] = 0
-					cell["map"][X-1][Y] *= 2
+			
+			if cell["map"][X][Y] == 0:
+				for curX in reversed(range(0, X)):
+					if cell["map"][curX][Y] != 0:
+						cell["map"][X][Y] = cell["map"][curX][Y]
+						cell["map"][curX][Y] = 0
+						break
+
+			if cell["map"][X][Y] != 0:
+				for curX in reversed(range(0, X)):
+					if cell["map"][curX][Y] == cell["map"][X][Y]:
+						cell["map"][X][Y] = cell["map"][X][Y] * 2
+						cell["map"][curX][Y] = 0
+						break
+					elif cell["map"][curX][Y] != 0:
+						break 
 
 def show_table():
 	print("Table")
@@ -192,12 +238,12 @@ def is_table_full():
 	return True
 
 def generete_new():
-	for _ in range(0, 2):
-		if is_table_full():
-			return
-		coords = get_rand_empthy_cell()
-		value = randrange(2, 5, 2)
-		cell["map"][coords["x"]][coords["y"]] = value
+	if is_table_full():
+		return
+	coords = get_rand_empthy_cell()
+	value = 2 ** randint(1, 2)
+	# print(value)
+	cell["map"][coords["x"]][coords["y"]] = value
 
 def repaint():
 	canvas.delete("all")
@@ -206,6 +252,8 @@ def repaint():
 
 def key_pressed(event):
 
+	oldMap = copy.deepcopy(cell["map"])
+	print(oldMap)
 	if event.char == "w":
 		moveUp()
 	elif event.char == "a":
@@ -221,9 +269,10 @@ def key_pressed(event):
 		time.sleep(3)
 		map_init()
 
-	generete_new()
+	print(oldMap)
+	if oldMap != cell["map"]:
+		generete_new()
 	# show_table() # TODO: delete
-	
 	repaint()
 
 def event_init(master):
@@ -238,5 +287,7 @@ map_init()
 repaint()
 
 event_init(master)
+
+generete_new()
 
 master.mainloop()
